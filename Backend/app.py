@@ -1,14 +1,15 @@
 from flask import Flask, request, send_from_directory, jsonify, render_template
+from flask_cors import CORS  # ⬅️ Tambahan
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 
 app = Flask(__name__)
+CORS(app)  # ⬅️ Izinkan CORS
+
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-data_list = []
 
 @app.route('/')
 def index():
