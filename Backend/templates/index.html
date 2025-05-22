@@ -21,11 +21,17 @@
         {% endif %}
 
         <p>
-          <a href="{{ url_for('download_teks', timestamp=item.timestamp) }}">📄 Download Teks</a> |
-          {% if item.gambar %}
-          <a href="{{ url_for('get_gambar', filename=item.gambar) }}" download>🖼️ Download Gambar</a> |
+          {% if item.teks %}
+            <a href="{{ url_for('download_teks', timestamp=item.timestamp) }}">📄 Download Teks</a> |
           {% endif %}
-          <a href="{{ url_for('download_semua', timestamp=item.timestamp) }}">📦 Download Semua</a>
+
+          {% if item.gambar %}
+            <a href="{{ url_for('download_gambar', filename=item.gambar) }}">🖼️ Download Gambar</a> |
+          {% endif %}
+
+          {% if item.teks or item.gambar %}
+            <a href="{{ url_for('download_zip', timestamp=item.timestamp) }}">📦 Download Semua</a>
+          {% endif %}
         </p>
 
         <form action="{{ url_for('hapus', timestamp=item.timestamp) }}" method="post" onsubmit="return confirm('Yakin ingin hapus?')">
