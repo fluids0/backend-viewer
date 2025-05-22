@@ -3,6 +3,7 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
+import io
 
 app = Flask(__name__)
 CORS(app)
