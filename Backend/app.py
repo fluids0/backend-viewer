@@ -14,10 +14,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # ✅ Tambahkan ini!
 data_list = []
 
-@app.route('/')
-def index():
-    return render_template('index.html', data=data_list)
-
 
 @app.route('/')
 def index():
