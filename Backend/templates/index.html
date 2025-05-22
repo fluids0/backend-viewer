@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar Kiriman</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <h1>Data yang Diterima</h1>
+  {% if data %}
+    {% for item in data %}
+      <div class="entry">
+        <strong>{{ item.timestamp }}</strong><br>
+        <p>{{ item.teks }}</p>
+        {% if item.gambar %}
+          <img src="/uploads/{{ item.gambar }}" alt="gambar">
+        {% endif %}
+        <hr>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>Belum ada data dikirim.</p>
+  {% endif %}
+</body>
+</html>
