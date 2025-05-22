@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 import io
+import zipfile
 
 app = Flask(__name__)
 CORS(app)
@@ -46,49 +47,54 @@ def get_gambar(filename):
 
 @app.route('/download/teks/<timestamp>')
 def download_teks(timestamp):
-    for item in data_list:
-        if item['timestamp'] == timestamp:
-            teks = item['teks'] or '(tidak ada teks)'
+    for entry in data_list:
+        if entry['timestamp'] == timestamp and entry['teks']:
+            teks = entry['teks']
             return send_file(
                 io.BytesIO(teks.encode()),
-                download_name=f'teks_{timestamp}.txt',
                 as_attachment=True,
+                download_name=f"{timestamp}_teks.txt",
                 mimetype='text/plain'
             )
-    return 'Data tidak ditemukan', 404
+    return 'Teks tidak ditemukan', 404
 
-@app.route('/download/semua/<timestamp>')
-def download_semua(timestamp):
-    for item in data_list:
-        if item['timestamp'] == timestamp:
-            mem_zip = io.BytesIO()
-            with zipfile.ZipFile(mem_zip, 'w') as zipf:
-                teks = item['teks'] or '(tidak ada teks)'
-                zipf.writestr(f'teks_{timestamp}.txt', teks)
-                if item['gambar']:
-                    path_gambar = os.path.join(app.config['UPLOAD_FOLDER'], item['gambar'])
-                    zipf.write(path_gambar, arcname=item['gambar'])
+@app.route('/download/gambar/<filename>')
+def download_gambar(filename):
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(filepath):
+        return send_file(filepath, as_attachment=True)
+    return 'Gambar tidak ditemukan', 404
 
-            mem_zip.seek(0)
-            return send_file(
-                mem_zip,
-                download_name=f'data_{timestamp}.zip',
-                as_attachment=True,
-                mimetype='application/zip'
-            )
+@app.route('/download/zip/<timestamp>')
+def download_zip(timestamp):
+    for entry in data_list:
+        if entry['timestamp'] == timestamp:
+            zip_io = io.BytesIO()
+            with zipfile.ZipFile(zip_io, 'w') as zf:
+                if entry['teks']:
+                    zf.writestr(f"{timestamp}_teks.txt", entry['teks'])
+                if entry['gambar']:
+                    img_path = os.path.join(app.config['UPLOAD_FOLDER'], entry['gambar'])
+                    if os.path.exists(img_path):
+                        zf.write(img_path, arcname=entry['gambar'])
+            zip_io.seek(0)
+            return send_file(zip_io, as_attachment=True, download_name=f"{timestamp}_data.zip", mimetype='application/zip')
     return 'Data tidak ditemukan', 404
 
 @app.route('/hapus/<timestamp>', methods=['POST'])
 def hapus(timestamp):
     global data_list
-    for item in data_list:
-        if item['timestamp'] == timestamp:
-            if item['gambar']:
-                path_gambar = os.path.join(app.config['UPLOAD_FOLDER'], item['gambar'])
-                if os.path.exists(path_gambar):
-                    os.remove(path_gambar)
-            data_list = [d for d in data_list if d['timestamp'] != timestamp]
-            break
+    new_data = []
+    for entry in data_list:
+        if entry['timestamp'] == timestamp:
+            if entry['gambar']:
+                try:
+                    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], entry['gambar']))
+                except FileNotFoundError:
+                    pass
+        else:
+            new_data.append(entry)
+    data_list = new_data
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
